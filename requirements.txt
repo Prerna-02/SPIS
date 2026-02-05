@@ -1,0 +1,54 @@
+# Smart Port Intelligence System (SPIS)
+# Requirements - TensorFlow Edition
+
+# Core Deep Learning
+tensorflow>=2.15.0
+keras>=3.0.0
+
+# ML Libraries
+lightgbm>=4.0.0
+xgboost>=2.0.0
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.15.0
+
+# Jupyter
+jupyter>=1.0.0
+jupyterlab>=4.0.0
+ipywidgets>=8.0.0
+
+# NLP (for Feature 2B - Chatbot)
+transformers>=4.30.0
+tokenizers>=0.13.0
+
+# Image Processing (for Facial Recognition)
+opencv-python>=4.8.0
+Pillow>=10.0.0
+
+# Backend
+fastapi>=0.100.0
+uvicorn>=0.22.0
+pydantic>=2.0.0
+python-jose>=3.3.0
+passlib>=1.7.4
+python-multipart>=0.0.6
+
+# Database
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
+# Utilities
+python-dotenv>=1.0.0
+tqdm>=4.65.0
+PyYAML>=6.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0

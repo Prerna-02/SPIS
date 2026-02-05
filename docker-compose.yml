@@ -1,0 +1,251 @@
+# =============================================================================
+# SMART PORT INTELLIGENCE SYSTEM (SPIS) - Full Stack
+# =============================================================================
+# 
+# Services:
+#   - Neo4j (Knowledge Graph)
+#   - Redpanda (Event Streaming)
+#   - Feature 1 API (Forecasting) - Port 8001
+#   - Feature 2 API (Anomaly) - Port 8002
+#   - Feature 3 API (Maintenance) - Port 8003
+#   - Feature 4 API (KG + Optimization) - Port 8000
+#   - AIS Ingestion (Background)
+#   - Frontend (Next.js) - Port 3000
+#
+# Usage:
+#   docker-compose up -d
+#   docker-compose logs -f
+#   docker-compose down
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ============================================================
+  # DATABASES
+  # ============================================================
+  
+  neo4j:
+    image: neo4j:5.15.0
+    container_name: spis-neo4j
+    ports:
+      - "7474:7474"  # HTTP Browser
+      - "7687:7687"  # Bolt protocol
+    environment:
+      - NEO4J_AUTH=neo4j/portintel2026
+      - NEO4J_PLUGINS=["apoc"]
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:7474"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redpanda:
+    image: redpandadata/redpanda:v23.3.5
+    container_name: spis-redpanda
+    command:
+      - redpanda start
+      - --smp 1
+      - --memory 512M
+      - --overprovisioned
+      - --kafka-addr PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:9092
+      - --pandaproxy-addr PLAINTEXT://0.0.0.0:8082
+      - --advertise-pandaproxy-addr PLAINTEXT://redpanda:8082
+    ports:
+      - "9092:9092"   # Kafka API
+      - "8082:8082"   # HTTP Proxy
+      - "9644:9644"   # Admin API
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.+true'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # AUTH SERVICE
+  # ============================================================
+
+  auth-api:
+    build:
+      context: ./services/auth
+      dockerfile: Dockerfile
+    container_name: spis-auth
+    ports:
+      - "8004:8004"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - POSTGRES_HOST=host.docker.internal
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=spis
+      - POSTGRES_USER=spis_user
+      - POSTGRES_PASSWORD=spis_dev_password
+    volumes:
+      - ./db:/app/db
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8004/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # ============================================================
+  # FEATURE APIs
+  # ============================================================
+
+  feature1-api:
+    build:
+      context: ./services/forecasting
+      dockerfile: Dockerfile
+    container_name: spis-feature1
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./models/feature1:/app/models:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  feature2-api:
+    build:
+      context: ./services/anomaly
+      dockerfile: Dockerfile
+    container_name: spis-feature2
+    ports:
+      - "8002:8002"
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+      - KAFKA_CONSUMER_GROUP=anomaly-detector
+      - ENABLE_STREAMING=true
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./services/anomaly/models:/app/models:ro
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    restart: unless-stopped
+
+  feature3-api:
+    build:
+      context: ./services/maintenance
+      dockerfile: Dockerfile
+    container_name: spis-feature3
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./models/feature3:/app/models:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  feature4-api:
+    build:
+      context: ./services/kg
+      dockerfile: Dockerfile
+    container_name: spis-feature4
+    ports:
+      - "8000:8000"
+    environment:
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=portintel2026
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ============================================================
+  # BACKGROUND SERVICES
+  # ============================================================
+
+  ais-ingestion:
+    build:
+      context: ./services/ais_ingestion
+      dockerfile: Dockerfile
+    container_name: spis-ais
+    environment:
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=portintel2026
+      - AISSTREAM_API_KEY=${AISSTREAM_API_KEY}
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      neo4j:
+        condition: service_healthy
+      feature4-api:
+        condition: service_started
+    restart: unless-stopped
+
+  csv-producer:
+    build:
+      context: ./services/anomaly
+      dockerfile: Dockerfile.producer
+    container_name: spis-csv-producer
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+      - STREAM_INTERVAL_SECONDS=2
+      - CSV_PATH=/app/data/ais_copenhagen_filtered.csv
+    volumes:
+      - ./services/anomaly/data:/app/data:ro
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ============================================================
+  # FRONTEND
+  # ============================================================
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: spis-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_FEATURE1_API=http://localhost:8001
+      - NEXT_PUBLIC_FEATURE2_API=http://localhost:8002
+      - NEXT_PUBLIC_FEATURE3_API=http://localhost:8003
+      - NEXT_PUBLIC_FEATURE4_API=http://localhost:8000
+    depends_on:
+      - feature1-api
+      - feature2-api
+      - feature3-api
+      - feature4-api
+    restart: unless-stopped
+
+  # ============================================================
+  # MONITORING (Optional)
+  # ============================================================
+
+  redpanda-console:
+    image: redpandadata/console:v2.3.8
+    container_name: spis-redpanda-console
+    environment:
+      - KAFKA_BROKERS=redpanda:9092
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redpanda
+
+# ============================================================
+# VOLUMES
+# ============================================================
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+  redpanda_data:

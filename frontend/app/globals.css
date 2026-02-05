@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --spis-bg: #0a1628;
+  --spis-card: #0f1f3d;
+  --spis-border: #1e3a5f;
+  --spis-accent: #3b82f6;
+}
+
+body {
+  background-color: var(--spis-bg);
+  color: #e2e8f0;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--spis-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--spis-border);
+  border-radius: 4px;
+}
+
+/* Card styling - glassmorphic for new theme */
+.card {
+  @apply backdrop-blur-xl bg-slate-800/60 border border-white/20 rounded-xl p-6 shadow-lg;
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent;
+}

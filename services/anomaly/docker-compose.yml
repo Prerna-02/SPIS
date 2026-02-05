@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # ============================================================
+  # REDPANDA (Kafka-compatible event streaming)
+  # ============================================================
+  redpanda:
+    image: redpandadata/redpanda:v23.3.5
+    container_name: redpanda
+    command:
+      - redpanda start
+      - --smp 1
+      - --memory 512M
+      - --overprovisioned
+      - --kafka-addr PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://localhost:9092
+      - --pandaproxy-addr PLAINTEXT://0.0.0.0:8082
+      - --advertise-pandaproxy-addr PLAINTEXT://localhost:8082
+    ports:
+      - "9092:9092"     # Kafka API
+      - "8082:8082"     # HTTP Proxy API
+      - "9644:9644"     # Admin API
+    volumes:
+      - redpanda-data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.+true'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # CSV PRODUCER (Streams AIS data to Redpanda)
+  # ============================================================
+  csv-producer:
+    build:
+      context: .
+      dockerfile: Dockerfile.producer
+    container_name: csv-producer
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+      STREAM_INTERVAL_SECONDS: "2"
+      CSV_PATH: /app/data/ais_copenhagen_filtered.csv
+    volumes:
+      - ./data:/app/data:ro
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ============================================================
+  # ANOMALY DETECTION API (FastAPI + Redpanda Consumer)
+  # ============================================================
+  anomaly-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: anomaly-api
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+      KAFKA_CONSUMER_GROUP: anomaly-detector
+      ENABLE_STREAMING: "true"
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./models:/app/models:ro
+      - ./data:/app/data:ro
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ============================================================
+  # REDPANDA CONSOLE (Optional - Web UI for monitoring)
+  # ============================================================
+  redpanda-console:
+    image: redpandadata/console:v2.3.8
+    container_name: redpanda-console
+    environment:
+      KAFKA_BROKERS: redpanda:9092
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redpanda
+
+volumes:
+  redpanda-data:

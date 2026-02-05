@@ -1,0 +1,73 @@
+{
+  "data_path": "../../data/raw/tallinn_feature1_daily_v2.csv",
+  "output_dir": "./models",
+  "encoder_length": 56,
+  "prediction_length": 7,
+  "train_ratio": 0.7,
+  "val_ratio": 0.15,
+  "test_ratio": 0.15,
+  "hidden_size": 64,
+  "lstm_layers": 2,
+  "attention_heads": 4,
+  "dropout": 0.1,
+  "learning_rate": 0.001,
+  "batch_size": 32,
+  "max_epochs": 100,
+  "patience": 10,
+  "quantiles": [
+    0.1,
+    0.5,
+    0.9
+  ],
+  "targets": [
+    "port_calls",
+    "throughput_containers"
+  ],
+  "trained_at": "2026-02-03T00:52:32.702585",
+  "feature_columns": [
+    "weather_condition_severity",
+    "port_congestion_level",
+    "delay_probability",
+    "handling_equipment_availability",
+    "warehouse_inventory_level",
+    "loading_unloading_time_hours",
+    "food_share",
+    "pharma_share",
+    "electronics_share",
+    "other_share",
+    "position_accuracy_m",
+    "month",
+    "day_of_week",
+    "day_of_year"
+  ],
+  "metrics": {
+    "port_calls": {
+      "r2": -0.009386658668518066,
+      "mae": 11.144431114196777,
+      "rmse": 14.118613243103027,
+      "smape": 5.82824182510376
+    },
+    "throughput_containers": {
+      "r2": 0.7424880266189575,
+      "mae": 1696.1142578125,
+      "rmse": 2180.927001953125,
+      "smape": 6.205023288726807
+    }
+  },
+  "feature_importance": {
+    "weather_condition_severity": 3.5722885058930842e-06,
+    "port_congestion_level": 1.1231291864532977e-05,
+    "delay_probability": 0.9188483357429504,
+    "handling_equipment_availability": 2.617810241645202e-05,
+    "warehouse_inventory_level": 0.02481330931186676,
+    "loading_unloading_time_hours": 3.1245032005244866e-05,
+    "food_share": 0.05540245771408081,
+    "pharma_share": 5.571680958382785e-06,
+    "electronics_share": 2.4111561288009398e-05,
+    "other_share": 1.7115560694946907e-05,
+    "position_accuracy_m": 6.819140253355727e-06,
+    "month": 6.100308837631019e-06,
+    "day_of_week": 0.0007710750214755535,
+    "day_of_year": 3.296103386674076e-05
+  }
+}

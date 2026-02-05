@@ -1,0 +1,98 @@
+================================================================================
+SPIS - QUICK START GUIDE (Step-by-Step)
+================================================================================
+
+PROBLEM: Docker Desktop is not running! You MUST start it first.
+
+================================================================================
+STEP 1: START DOCKER DESKTOP
+================================================================================
+
+1. Open Docker Desktop application
+2. Wait for it to show "Engine running"
+3. Then proceed to Step 2
+
+================================================================================
+STEP 2: VERIFY DOCKER IS RUNNING
+================================================================================
+
+Open PowerShell and run:
+    docker ps
+
+You should see output (might be empty, that's OK).
+If you see an error about "pipe not found", Docker is still starting - wait 30 seconds.
+
+================================================================================
+STEP 3: RUN THE STARTUP SCRIPT
+================================================================================
+
+Once Docker is running:
+    cd E:\DL_Final_Project
+    .\START_ALL_SERVICES.ps1
+
+This will open 8 PowerShell windows (7 services + 1 for databases).
+
+================================================================================
+STEP 4: WAIT & VERIFY (30-40 seconds)
+================================================================================
+
+Check if all ports are listening:
+    netstat -ano | findstr "LISTENING" | findstr ":3000 :8000 :8001 :8002 :8003 :8004"
+
+You should see 6 lines (one for each service).
+
+================================================================================
+STEP 5: OPEN THE APP
+================================================================================
+
+    http://localhost:3000
+
+Login and go to the Anomaly page.
+
+================================================================================
+STEP 6: VERIFY LIVE DATA
+================================================================================
+
+On the Anomaly page, you should see:
+  - Green badge: "🛰️ Live AISStream Data"  
+  - Real vessel names: NAFTA, HABE-3, SEKTORI, AHTO-15, etc.
+  - NOT simulated names: ECKERÖ LINE, CARGO EXPRESS, etc.
+
+================================================================================
+DEBUGGING
+================================================================================
+
+If you STILL see simulated data:
+
+1. Look at the "SPIS - AIS Stream" window - should show vessels streaming
+2. Look at the "SPIS - Anomaly (8002)" window - should show:
+   [INGEST] Received X vessels
+   [INGEST DEBUG] Processing: NAFTA...
+
+3. Manually test the pipeline:
+   cd E:\DL_Final_Project
+   
+   # Check if anomaly service has data
+   Invoke-RestMethod -Uri "http://localhost:8002/live/vessels"
+   
+   # If empty, manually inject data
+   $log = Get-ChildItem "data\raw\aisstream_logs\*.jsonl" | Sort -Descending | Select -First 1
+   Get-Content $log.FullName -Tail 1
+
+================================================================================
+SUMMARY
+================================================================================
+
+Current Issues:
+  ✗ Docker Desktop not running
+  ✗ Services not started  
+  ✗ Frontend showing simulated data
+  ✗ AIS data not flowing to anomaly service
+
+Once Docker is running:
+  1. Run START_ALL_SERVICES.ps1
+  2. Wait 30-40 seconds
+  3. Open http://localhost:3000
+  4. Check the PowerShell windows for debug output
+
+================================================================================

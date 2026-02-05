@@ -1,0 +1,18 @@
+{
+  "threshold": 0.31786205050397043,
+  "percentile": 95,
+  "threshold_95": 0.31786205050397043,
+  "threshold_99": 0.33514323380348354,
+  "val_vessels": 13,
+  "val_error_mean": 0.17773815183544292,
+  "val_error_std": 0.09707654529118882,
+  "detection_type": "vessel-level",
+  "port": "Copenhagen",
+  "bbox": {
+    "lat_min": 54.5,
+    "lat_max": 58.5,
+    "lon_min": 7.0,
+    "lon_max": 16.0
+  },
+  "created_at": "2026-01-28T21:04:37.584014"
+}

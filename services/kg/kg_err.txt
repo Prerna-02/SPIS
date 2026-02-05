@@ -1,0 +1,9 @@
+INFO:     Started server process [40976]
+INFO:     Waiting for application startup.
+INFO:neo4j_client:Connecting to Neo4j at bolt://localhost:7687...
+INFO:neo4j_client:✅ Connected to Neo4j
+INFO:     Application startup complete.
+ERROR:    [Errno 10048] error while attempting to bind on address ('127.0.0.1', 8000): [winerror 10048] only one usage of each socket address (protocol/network address/port) is normally permitted
+INFO:     Waiting for application shutdown.
+INFO:neo4j_client:Neo4j connection closed
+INFO:     Application shutdown complete.

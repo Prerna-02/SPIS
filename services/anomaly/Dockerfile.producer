@@ -1,0 +1,12 @@
+# Dockerfile for CSV Producer
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install Kafka client
+RUN pip install --no-cache-dir kafka-python pandas
+
+# Copy producer script
+COPY producer_csv_to_redpanda.py .
+
+CMD ["python", "producer_csv_to_redpanda.py"]

@@ -1,0 +1,65 @@
+# =============================================================================
+# SPIS - Database Services (PostgreSQL + Neo4j)
+# =============================================================================
+# 
+# This compose file runs ONLY the database services.
+# Application services (auth, frontend, features) run locally for development.
+#
+# Usage:
+#   cd db
+#   docker-compose up -d
+#
+# =============================================================================
+
+services:
+  # ============================================================
+  # PostgreSQL - Main relational database
+  # ============================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: spis-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: spis
+      POSTGRES_USER: spis_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spis_dev_password}
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d:ro
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spis_user -d spis"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # Neo4j - Knowledge Graph database
+  # ============================================================
+  neo4j:
+    image: neo4j:5.15.0
+    container_name: spis-neo4j
+    restart: unless-stopped
+    ports:
+      - "7474:7474"  # HTTP Browser UI
+      - "7687:7687"  # Bolt protocol
+    environment:
+      - NEO4J_AUTH=neo4j/portintel2026
+      - NEO4J_PLUGINS=["apoc"]
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:7474"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# ============================================================
+# VOLUMES
+# ============================================================
+volumes:
+  postgres_data:
+  neo4j_data:
+  neo4j_logs:

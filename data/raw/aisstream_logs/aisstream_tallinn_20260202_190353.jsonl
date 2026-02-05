@@ -1,0 +1,1 @@
+{"ingest_ts_utc": "2026-02-02T19:03:59.382178+00:00", "message_type": "PositionReport", "mmsi": 314149000, "lat": 59.463116666666664, "lon": 24.714856666666666, "sog": 0, "cog": 36.4, "heading": null, "ais_ts": 57, "ship_type_code": null, "ship_type": "unknown", "ship_name": "SEGULA"}

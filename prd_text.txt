@@ -1,0 +1,305 @@
+=== PAGE 1 ===
+Product Requirements Document (PRD): Port Intelligence System
+Project Title: Smart Port Intelligence System (SPIS)
+Objective: To  build  an  integrated  smart  port  intelligence  system  capable  of  forecasting  throughput,
+detecting anomalies via chatbot queries, scheduling predictive maintenance using synthetic sensor data,
+and optimizing berth assignment. The platform will support ground-level staff via a secure login system,
+integrating facial recognition and traditional credentials, and be deployed using containerized services.
+System Overview
+Core Features: 1. Port Throughput Forecasting for Capacity Planning 2. Anomaly Detection + Chatbot
+Escalation  System  3.  Smart  Predictive  Maintenance  Scheduling  (with  synthetic  dataset)  4.  Route
+Optimization and Berth Scheduling (API-integrated, Phase II)
+Supporting Components: - Secure Login with Facial Recognition + Password - Text-to-SQL Query Interface
+(via chatbot for dynamic querying) - Docker-based microservice deployment on a free-tier cloud platform
+Feature 1: Port Throughput Forecasting
+Model Type: LSTM (Long Short-Term Memory)
+Input: - Historical throughput volume (TEUs, cargo units) - Port congestion level - Weather severity -
+Shipping cost
+Output: - Forecasted cargo volume (daily/weekly/monthly)
+Evaluation Metrics: - Mean Absolute Error (MAE) - Root Mean Squared Error (RMSE) - R-squared (R²) score
+Fine-Tuning  Strategy: -  Hyperparameter  tuning  (hidden  layers,  window  size,  dropout  rate)  -  Rolling
+validation using walk-forward approach
+Feature 2: Anomaly Detection + Chatbot Escalation
+Tasks: a) Anomaly Detection - Continuously monitors structured port operations data for abnormalities. -
+Uses autoencoders to identify anomalies in operational parameters (e.g. equipment usage, traffic flow,
+delays).
+b) Chatbot Issue Escalation System - Accepts natural language issue descriptions from port staff. - Uses
+NLP + classification to determine: - Known issue ➔ provide resolution - Unknown/complex issue ➔ escalate
+1
+
+=== PAGE 2 ===
+to human - Flags escalated issues to department via email/alert system - Allows user to upload issues
+manually or through chatbot interface
+Model Type: - Autoencoder (Anomaly Detection) - BERT or DistilBERT (Intent Classification)
+Evaluation  Metrics: -  Anomaly  Detection:  Reconstruction  Error  Threshold,  AUC-ROC  -  Classification:
+Accuracy, Precision, Recall, F1-Score
+Fine-Tuning Strategy: - Threshold calibration for autoencoder loss - Few-shot fine-tuning BERT model with
+staff query logs
+Feature 3: Predictive Maintenance Scheduling
+Model Type: LSTM or 1D CNN (based on synthetic time-series sensor data)
+Synthetic  Data  Structure: -  Equipment:  Cranes,  Stackers,  Trucks  -  Sensors:  Temperature,  Pressure,
+Vibration, Load - Event Timelines: Loading/Unloading timestamps
+Output: - Maintenance Risk Score - Predicted Failure Window
+Evaluation Metrics: - Precision, Recall, F1-Score (for fault prediction) - Mean Time Before Failure (simulation
+validation)
+Fine-Tuning  Strategy: -  Model  ensemble  tuning  (comparing  LSTM  vs.  1D  CNN)  -  Sensor  signal
+augmentation
+Feature 4: Route Optimization + Berth Scheduling
+Planned Data Inputs (via API): - Berth occupancy - Ship ETA - Handling time
+Model Type: - Reinforcement Learning (RL) Agent or heuristic + rule-based model - Possibly lightweight
+GNN if terminal layout supports it
+Goal: Minimize vessel wait time and maximize berth throughput
+Authentication System
+Login Flow: - Facial Recognition (CV-based, stored embedding in DB) - Password fallback login
+Model: - FaceNet or Dlib + cosine similarity matching
+Database Storage: - Securely hashed facial embeddings + salted password hashes
+2
+
+=== PAGE 3 ===
+Frontend Structure (React + TailwindCSS)
+This is an interactive web application. Every feature has user-driven controls (filters, uploads, run buttons)
+and renders live results (charts, tables, alerts). UI is role-based (Ground Staff, Ops Manager, Maintenance
+Lead, Admin).
+Roles & Access - Ground Staff: Feature 2 (Issue upload/chatbot), view-only alerts. - Ops Manager: Feature
+1,  Feature  2  dashboards,  Feature  4  (when  enabled).  -  Maintenance  Lead: Feature  3  dashboards,
+maintenance scheduler. - Admin/DB Manager: user management, facial enrollment, system configs.
+Navigation (Left Sidebar) - Home (KPIs) - Feature 1: Throughput Forecasting - Feature 2: Anomaly + Issue
+Assistant - Feature 3: Predictive Maintenance - Feature 4: Berth Scheduling (Phase II) - Admin (only Admin)
+Dashboard Homepage (Role-based access)
+└── Feature 1: Forecast View
+        └── Historical Chart + Prediction Panel
+└── Feature 2: Anomaly Detection & Chatbot
+        └── a) Anomaly Detection Logs + Upload Interface
+        └── b) Chatbot Interface + Escalation Alerts
+└── Feature 3: Maintenance Dashboard
+        └── Equipment Table + Risk Scores + Calendar View
+└── Feature 4: Berth Scheduling Interface
+        └── Current Berth Assignments + ETA Optimization Panel
+└── Login Page
+        └── Camera + Password Panel
+UI Wireframes (Text Wireframe)
+0) Login (Face + Password)
++---------------------------------------------------+
+| SPIS | Smart Port Intelligence System              |
++---------------------------------------------------+
+| [ Camera Feed ]      |  Email/Username             |
+|  (Face Capture)      |  [______________]           |
+|  [ Capture ]         |  Password                   |
+|                      |  [______________]           |
+|  Face Status: ____   |  [ Sign In ]                |
+|                      |  [ Enroll Face ] (Admin)    |
++---------------------------------------------------+
+3
+
+=== PAGE 4 ===
+1) Home / KPI Overview
++---------------------------------------------------+
+| Sidebar | Home                                     |
++---------+------------------------------------------+
+| Home    | KPIs: Today / Week / Month               |
+| F1      |  - Throughput (Actual vs Forecast)       |
+| F2      |  - Active Alerts (Anomalies / Escalations)|
+| F3      |  - Equipment at Risk (Top 5)             |
+| F4      |  - Berth Utilization (Phase II)          |
+| Admin   |                                          |
++---------+------------------------------------------+
+| Charts: Throughput Trend | Congestion Trend | ...  |
++---------------------------------------------------+
+2) Feature 1: Throughput Forecasting (Interactive)
++---------------------------------------------------+
+| Feature 1: Throughput Forecasting                  |
++---------------------------------------------------+
+| Data Source: [Kaggle/CSV/API]  Granularity:[Month] |
+| Date Range: [Start] - [End]   Target: [Throughput] |
+| Exogenous Features: [x] Congestion [x] Cost [x] Wx |
+| Window Size: [ 12 ]  Horizon: [ 1 ] month          |
+| Model: (•) LSTM  ( ) GRU   ( ) XGBoost baseline    |
+| [ Train / Re-train ]  [ Run Forecast ] [ Export ]  |
++---------------------------------------------------+
+| Chart: Actual vs Forecast (line)                   |
+| Table: next 1/3/6 periods + confidence band        |
+| Capacity Planner Panel:                            |
+|  - Required Yard Space: ____                       |
+|  - Suggested Extra Shifts: ____ (optional logic)   |
++---------------------------------------------------+
+3) Feature 2: Anomaly Detection + Issue Assistant
+2A) Anomaly Detection (Autoencoder) (Interactive)
++---------------------------------------------------+
+| Feature 2A: Anomaly Detection                       |
++---------------------------------------------------+
+| Data Stream: [Ops Metrics] [Equipment] [Traffic]    |
+| Threshold Mode: (•) Auto-calibrate ( ) Manual       |
+| Threshold Slider: [-----|----]  (shows error value) |
+4
+
+=== PAGE 5 ===
+| [ Run Detection ] [ Acknowledge ] [ Export Report ] |
++---------------------------------------------------+
+| Plot: Reconstruction Error over time                |
+| Alerts Table:                                      |
+|  Time | Signal | Error | Severity | Status | Owner  |
+|  ---- | ------ | ----- | -------- | ------ | -----  |
++---------------------------------------------------+
+| Drilldown Panel (selected alert):                   |
+|  Contributing Features + Suggested checks           |
++---------------------------------------------------+
+2B) Staff Query Upload + Chatbot Escalation (Interactive)
++---------------------------------------------------+
+| Feature 2B: Issue Assistant (Chatbot + Escalation)  |
++---------------------------------------------------+
+| Issue Type: [Safety/Delay/Equipment/Other]          |
+| Location: [Terminal/Berth]  Severity: [Low/Med/Hi]  |
+| Attachments: [Upload Photo] [Upload Log]            |
+| Message:                                           |
+|  "Crane 4 making noise; container moves slower..." |
+| [ Send ]                                           |
++---------------------------------------------------+
+| Chat Panel:                                         |
+|  Bot: Try steps A/B/C...                             |
+|  User: Done, still failing                           |
+|  Bot: Escalating to Maintenance...                   |
++---------------------------------------------------+
+| Escalation Card (if needed):                        |
+|  Department: [Maintenance]  SLA: [2 hrs]            |
+|  Notify via: [Email] [SMS] [In-app]                 |
+|  Ticket ID: ####   Status: Open / In Progress       |
++---------------------------------------------------+
+4) Feature 3: Predictive Maintenance Scheduling (Interactive)
++---------------------------------------------------+
+| Feature 3: Predictive Maintenance                    |
++---------------------------------------------------+
+| Equipment: [All ▼]  Sensor Set: [Temp/Vib/Load]      |
+| View: (•) Fleet Risk  ( ) Single Asset               |
+| [ Generate Synthetic Batch ] [ Train ] [ Score Now ] |
++---------------------------------------------------+
+| Equipment Risk Table:                                |
+|  Asset | Risk | Pred. Failure Window | Action        |
+5
+
+=== PAGE 6 ===
+|  ----  | ---- | ------------------- | ------------- |
+|  Crane4| 0.82 | 3-7 days             | Schedule ASAP |
++---------------------------------------------------+
+| Calendar Scheduler:                                  |
+|  Drag & drop maintenance windows vs forecast demand  |
+|  [ Publish Plan ] [ Export ]                         |
++---------------------------------------------------+
+5) Feature 4: Route Optimization + Berth Scheduling (Phase II) (Interactive)
++---------------------------------------------------+
+| Feature 4: Berth Scheduling                          |
++---------------------------------------------------+
+| Data Source: [Port API]  Refresh: [Auto/Manual]      |
+| Current Time: ____  Planning Horizon: [6/12/24 hrs]  |
+| Objective: [Min Wait] [Min Fuel] [Max Utilization]   |
+| [ Run Optimizer ] [ Simulate What-if ] [ Export ]    |
++---------------------------------------------------+
+| Berth Gantt View: (time vs berth lanes)              |
+|  Berth 1: [Ship A ---delayed---]                     |
+|  Berth 2: [free]  Berth 3: [Ship C]                  |
++---------------------------------------------------+
+| Recommendation Panel:                                |
+|  - Ship B: slow-down / wait at anchorage / reroute   |
+|  - Alternative Berth: #2 (ETA fit)                   |
+|  - Est. fuel saved: ____, Est. delay reduced: ____   |
++---------------------------------------------------+
+Backend Architecture (FastAPI + PostgreSQL + Docker)
+Design Principles - Microservices per feature for clear ownership and independent scaling. - API Gateway
+for auth, routing, rate limits. - Shared Observability (logs/metrics/traces) across services.
+Core API Services (logical) - auth-service: login, facial verification, user roles - forecast-service: Feature 1
+training/inference -  anomaly-service: Feature 2A autoencoder detection -  assistant-service: Feature 2B
+chatbot + escalation classifier + text2sql - maintenance-service: Feature 3 scoring + scheduling - berth-
+service: Feature 4 optimizer (Phase II) - notification-service: email/SMS/in-app alerts, SLAs - data-service:
+dataset ingestion, validation, feature store access
+Storage -  PostgreSQL:  users/roles,  issues,  alerts,  model  runs,  configs  -  Object  storage  (MinIO/S3-
+compatible): model artifacts, uploads, synthetic data batches
+Containerization (Docker) - Each service runs in its own Docker container. - Docker Compose (local dev)
+and optional lightweight orchestration (free-tier) for deployment.
+6
+
+=== PAGE 7 ===
+Backend Microservices Diagram (Text Diagram)
+                           +-------------------+
+                           |   Web / Mobile    |
+                           |   (React UI)      |
+                           +---------+---------+
+                                     |
+                                     v
+                           +-------------------+
+                           |   API Gateway     |
+                           | (Nginx / Traefik) |
+                           +--+-----+-----+----+
+                              |     |     |
+             Auth + RBAC      |     |     |   Observability
+                              |     |     |   (logs/metrics)
+                              v     v     v
+                       +---------+ +---------+ +------------------+
+                       | auth-   | | data-   | | notification-    |
+                       | service | | service | | service          |
+                       +----+----+ +----+----+ +---------+--------+
+                            |           |                |
+                            |           |                |
+   +------------------------+-----------+----------------+-------------------+
+   |                        |           |                                    |
+   v                        v           v                                    v
++-----------+        +-------------+  +-------------+                 
++---------------+
+| forecast- |        | anomaly-    |  | assistant-  |                 | berth-
+service |
+| service   |        | service     |  | service     |                 | (Phase 
+II)    |
+| (LSTM)    |        | (AE)        |  | (Chatbot +  |                 | (RL/
+Heuristic)|
++-----+-----+        +------+------+  |  Text2SQL)  |                 +-------
++-------+
+      |                     |         +------+------+                         |
+      |                     |                |                                |
+      v                     v                v                                v
++------------------+  +------------------+  +------------------+        
++------------------+
+| Model Registry / |  | Alerts & Events  |  | Issues/Tickets   |        | Berth 
+Schedule   |
+| Artifact Store   |  | (DB tables)      |  | (DB tables)      |        | (DB 
+tables/API)  |
++------------------+  +------------------+  +------------------+        
+7
+
+=== PAGE 8 ===
++------------------+
+                 +--------------------------------------------------+
+                 |                maintenance-service               |
+                 | (Synthetic gen + LSTM/1D-CNN scoring + scheduler)|
+                 +---------------------------+----------------------+
+                                             |
+                                             v
+                                   +---------------------+
+                                   | Maintenance Plans   |
+                                   | (DB + Calendar)     |
+                                   +---------------------+
+                         Shared Storage:
+                     - PostgreSQL (structured)
+                     - Object Storage (uploads, models)
+Key API Endpoints (examples) -  auth-service: /login, /face/enroll, /face/verify, /users, /roles -  forecast-
+service: /train, /predict, /metrics, /export - anomaly-service: /detect, /threshold, /alerts, /export - assistant-
+service: /chat, /issue/create, /issue/classify, /text2sql - maintenance-service: /synthetic/generate, /train, /
+score, /schedule - berth-service: /status, /optimize, /simulate (Phase II) - notification-service: /notify, /sla, /
+subscriptions
+DevOps / Deployment (Free Tier Plan)
+GitHub Actions (CI): Code check + Model validation
+DockerHub or GitHub Container Registry
+Render or Railway (for backend deployment)
+Vercel (for frontend hosting)
+Secrets managed via env files
+Future Enhancements (Optional)
+Integration with port IoT systems or SCADA APIs
+Staff scheduling prediction using throughput forecast
+Data warehouse (Snowflake or Redshift) for large-scale ops
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+8
+
