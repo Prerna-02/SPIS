@@ -5,7 +5,7 @@ An integrated smart port intelligence system for forecasting throughput, anomaly
 ## Features
 
 1. **Port Throughput Forecasting** - LSTM-based time series prediction
-2. **Anomaly Detection + Chatbot** - Autoencoder + BERT intent classification
+2. **Anomaly Detection ** - Autoencoder 
 3. **Predictive Maintenance** - Multi-task LSTM (RUL + Failure Mode)
 4. **Berth Scheduling** - Route optimization (Phase II)
 
